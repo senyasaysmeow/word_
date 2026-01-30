@@ -1,0 +1,7 @@
+{% if error %}
+<div data-error>{{ error }}</div>
+{% else %}
+<div data-similarity="{{ similarity }}" data-correct="{{ correct|yesno:'true,false' }}">
+    <!-- Data attributes for Alpine.js to read -->
+</div>
+{% endif %}

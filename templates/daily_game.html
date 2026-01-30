@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Word Challenge{% endblock %}
+
+{% block content %}
+<div class="fade-in" x-data="dailyGame()">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-white tracking-wide mb-2">Daily Challenge</h1>
+        <p class="text-terminal-muted">
+            Guess today's secret word using semantic similarity.
+        </p>
+    </header>
+    
+    <!-- Win State -->
+    <div x-show="won" x-cloak class="mb-8 p-6 border border-terminal-accent bg-terminal-accent/5">
+        <div class="text-terminal-accent text-2xl font-bold mb-2">You got it!</div>
+        <div class="text-white text-lg mb-2">The word was: <span class="font-bold" x-text="winningWord"></span></div>
+        <div class="text-terminal-muted text-sm">
+            Solved in <span x-text="guesses.length"></span> guesses
+        </div>
+    </div>
+    
+    <!-- Guess Form -->
+    <form 
+        x-show="!won"
+        @submit.prevent="submitGuess()"
+        class="mb-8"
+    >
+        <div class="mb-4">
+            <label class="block text-terminal-dim text-xs mb-2 tracking-wide">ENTER YOUR GUESS</label>
+            <input 
+                type="text" 
+                x-model="currentGuess"
+                placeholder="Type a word..."
+                class="w-full bg-transparent border-b border-white/20 py-2 text-white focus:border-terminal-accent transition-colors"
+                autocomplete="off"
+                :disabled="loading"
+                x-ref="guessInput"
+            >
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button 
+                type="submit"
+                class="px-6 py-2 bg-terminal-accent/10 text-terminal-accent border border-terminal-accent/30 hover:bg-terminal-accent/20 transition-colors text-sm tracking-wide"
+                :disabled="loading || !currentGuess.trim()"
+            >
+                <span x-show="!loading">GUESS</span>
+                <span x-show="loading">CHECKING...</span>
+            </button>
+            
+            <div x-show="loading" class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <span class="text-terminal-dim text-sm" x-text="guesses.length + ' guesses'"></span>
+        </div>
+        
+        <!-- Error display -->
+        <div x-show="error" class="mt-4 text-red-400 text-sm" x-text="error"></div>
+    </form>
+    
+    <!-- Latest Guess Result -->
+    <div x-show="latestResult && !won" x-cloak class="mb-6 p-4 border border-white/10">
+        <div class="flex items-center justify-between">
+            <span class="text-white font-semibold" x-text="latestResult?.word"></span>
+            <span 
+                class="font-bold text-lg"
+                :class="getSimilarityColor(latestResult?.similarity)"
+                x-text="latestResult?.similarity?.toFixed(1) + '%'"
+            ></span>
+        </div>
+        <div class="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div 
+                class="h-full transition-all duration-500"
+                :class="getSimilarityBgColor(latestResult?.similarity)"
+                :style="'width: ' + (latestResult?.similarity || 0) + '%'"
+            ></div>
+        </div>
+    </div>
+    
+    <!-- Guess History -->
+    <div x-show="guesses.length > 0" class="mb-8">
+        <h3 class="text-terminal-dim text-xs tracking-wide mb-4">GUESS HISTORY (SORTED BY SIMILARITY)</h3>
+        <div class="space-y-2 max-h-[400px] overflow-y-auto">
+            <template x-for="(guess, index) in sortedGuesses" :key="guess.word">
+                <div 
+                    class="flex items-center justify-between py-2 px-3 border-b border-white/5"
+                    :class="guess.similarity === 100 ? 'bg-terminal-accent/10 border-terminal-accent/30' : ''"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="text-terminal-dim text-xs w-8" x-text="'#' + (index + 1)"></span>
+                        <span 
+                            class="text-white"
+                            :class="guess.similarity === 100 ? 'text-terminal-accent font-bold' : ''"
+                            x-text="guess.word"
+                        ></span>
+                    </div>
+                    <span 
+                        class="font-mono"
+                        :class="getSimilarityColor(guess.similarity)"
+                        x-text="guess.similarity.toFixed(1) + '%'"
+                    ></span>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="mt-12 pt-8 border-t border-white/5">
+        <h3 class="text-terminal-muted text-xs tracking-wide mb-4">HOW TO PLAY</h3>
+        <div class="text-terminal-dim text-sm space-y-2">
+            <p>Guess words and see how semantically similar they are to today's secret word.</p>
+            <p>Similarity is measured using word embeddings (0% = unrelated, 100% = exact match).</p>
+            <p>Use the feedback to narrow down your guesses!</p>
+        </div>
+        
+        <div class="mt-6 text-terminal-dim text-sm">
+            <p class="text-terminal-muted text-xs tracking-wide mb-2">HINT THRESHOLDS</p>
+            <div class="flex gap-4 flex-wrap">
+                <span><span class="text-red-400">0-50%</span> Cold</span>
+                <span><span class="text-yellow-400">50-70%</span> Warm</span>
+                <span><span class="text-orange-400">70-85%</span> Hot</span>
+                <span><span class="text-terminal-accent">85-100%</span> Very Hot!</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function dailyGame() {
+    return {
+        currentGuess: '',
+        guesses: [],
+        loading: false,
+        error: null,
+        won: false,
+        winningWord: null,
+        latestResult: null,
+        
+        get sortedGuesses() {
+            return [...this.guesses].sort((a, b) => b.similarity - a.similarity);
+        },
+        
+        async submitGuess() {
+            const word = this.currentGuess.trim().toLowerCase();
+            
+            if (!word) {
+                this.error = 'Please enter a word';
+                return;
+            }
+            
+            // Check if already guessed
+            if (this.guesses.some(g => g.word === word)) {
+                this.error = 'You already guessed that word!';
+                return;
+            }
+            
+            this.loading = true;
+            this.error = null;
+            
+            try {
+                const formData = new FormData();
+                formData.append('guess', word);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                const response = await fetch('{% url "daily_guess" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const html = await response.text();
+                
+                // Parse the response (we'll extract data from the partial)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const errorEl = doc.querySelector('[data-error]');
+                const similarityEl = doc.querySelector('[data-similarity]');
+                const correctEl = doc.querySelector('[data-correct]');
+                
+                if (errorEl) {
+                    this.error = errorEl.textContent;
+                    return;
+                }
+                
+                const similarity = parseFloat(similarityEl?.dataset.similarity || 0);
+                const correct = correctEl?.dataset.correct === 'true';
+                
+                const result = {
+                    word: word,
+                    similarity: similarity
+                };
+                
+                this.guesses.push(result);
+                this.latestResult = result;
+                this.currentGuess = '';
+                
+                if (correct) {
+                    this.won = true;
+                    this.winningWord = word;
+                }
+                
+                // Focus input for next guess
+                this.$nextTick(() => {
+                    this.$refs.guessInput?.focus();
+                });
+                
+            } catch (err) {
+                this.error = 'Failed to check guess: ' + err.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        getSimilarityColor(similarity) {
+            if (!similarity) return 'text-terminal-dim';
+            if (similarity >= 85) return 'text-terminal-accent';
+            if (similarity >= 70) return 'text-orange-400';
+            if (similarity >= 50) return 'text-yellow-400';
+            return 'text-red-400';
+        },
+        
+        getSimilarityBgColor(similarity) {
+            if (!similarity) return 'bg-terminal-dim';
+            if (similarity >= 85) return 'bg-terminal-accent';
+            if (similarity >= 70) return 'bg-orange-400';
+            if (similarity >= 50) return 'bg-yellow-400';
+            return 'bg-red-400';
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+[x-cloak] { display: none !important; }
+</style>
+{% endblock %}

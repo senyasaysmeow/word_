@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Word Analogy Calculator{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-white tracking-wide mb-2">Word Analogy</h1>
+        <p class="text-terminal-muted">
+            Compute A - B + C to discover semantic relationships.
+        </p>
+    </header>
+    
+    <div class="mb-8">
+        <p class="text-terminal-dim text-sm mb-4">
+            Example: "king" - "man" + "woman" = "queen"
+        </p>
+    </div>
+    
+    <form 
+        hx-post="{% url 'analogy_calculate' %}"
+        hx-target="#results"
+        hx-indicator="#loading"
+        class="mb-8"
+    >
+        {% csrf_token %}
+        
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD A</label>
+                <input 
+                    type="text" 
+                    name="word_a" 
+                    placeholder="king"
+                    class="w-full bg-transparent border-b border-white/20 py-2 text-white focus:border-terminal-accent transition-colors"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+            
+            <span class="text-terminal-accent text-2xl mt-5">-</span>
+            
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD B</label>
+                <input 
+                    type="text" 
+                    name="word_b" 
+                    placeholder="man"
+                    class="w-full bg-transparent border-b border-white/20 py-2 text-white focus:border-terminal-accent transition-colors"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+            
+            <span class="text-terminal-accent text-2xl mt-5">+</span>
+            
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD C</label>
+                <input 
+                    type="text" 
+                    name="word_c" 
+                    placeholder="woman"
+                    class="w-full bg-transparent border-b border-white/20 py-2 text-white focus:border-terminal-accent transition-colors"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+            
+            <span class="text-terminal-accent text-2xl mt-5">=</span>
+            
+            <span class="text-terminal-muted text-2xl mt-5">?</span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button 
+                type="submit"
+                class="px-6 py-2 bg-terminal-accent/10 text-terminal-accent border border-terminal-accent/30 hover:bg-terminal-accent/20 transition-colors text-sm tracking-wide"
+            >
+                CALCULATE
+            </button>
+            
+            <div id="loading" class="htmx-indicator">
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <div id="results">
+        <!-- Results will be inserted here via HTMX -->
+    </div>
+    
+    <div class="mt-12 pt-8 border-t border-white/5">
+        <h3 class="text-terminal-muted text-xs tracking-wide mb-4">TRY THESE EXAMPLES</h3>
+        <div class="grid gap-2 text-sm">
+            <button 
+                onclick="fillExample('paris', 'france', 'germany')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                paris - france + germany = ?
+            </button>
+            <button 
+                onclick="fillExample('doctor', 'hospital', 'school')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                doctor - hospital + school = ?
+            </button>
+            <button 
+                onclick="fillExample('walking', 'walk', 'run')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                walking - walk + run = ?
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillExample(a, b, c) {
+    document.querySelector('input[name="word_a"]').value = a;
+    document.querySelector('input[name="word_b"]').value = b;
+    document.querySelector('input[name="word_c"]').value = c;
+}
+</script>
+{% endblock %}

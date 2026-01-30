@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Word Embeddings Playground{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <header class="mb-12">
+        <h1 class="text-4xl font-bold text-white tracking-wide mb-3">Word Embeddings Playground</h1>
+        <p class="text-terminal-muted text-lg">Explore word vectors, analogies, and semantic relationships.</p>
+    </header>
+    
+    <div class="grid gap-8 md:grid-cols-3">
+        <!-- Analogy Calculator -->
+        <a href="{% url 'analogy' %}" class="group block p-6 border border-white/10 hover:border-terminal-accent/50 transition-colors">
+            <div class="text-terminal-accent text-sm font-semibold mb-2 tracking-wider">01</div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-terminal-accent transition-colors">
+                Word Analogy
+            </h2>
+            <p class="text-terminal-dim text-sm leading-relaxed mb-4">
+                A - B + C = ?<br>
+                Explore semantic relationships like "king - man + woman = queen"
+            </p>
+            <div class="text-terminal-muted text-xs tracking-wide group-hover:text-terminal-accent transition-colors">
+                EXPLORE →
+            </div>
+        </a>
+        
+        <!-- Visualization -->
+        <a href="{% url 'visualize' %}" class="group block p-6 border border-white/10 hover:border-terminal-accent/50 transition-colors">
+            <div class="text-terminal-accent text-sm font-semibold mb-2 tracking-wider">02</div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-terminal-accent transition-colors">
+                Visualize Vectors
+            </h2>
+            <p class="text-terminal-dim text-sm leading-relaxed mb-4">
+                See words in 2D space.<br>
+                Similar words cluster together in the embedding space.
+            </p>
+            <div class="text-terminal-muted text-xs tracking-wide group-hover:text-terminal-accent transition-colors">
+                EXPLORE →
+            </div>
+        </a>
+        
+        <!-- Daily Game -->
+        <a href="{% url 'daily_game' %}" class="group block p-6 border border-white/10 hover:border-terminal-accent/50 transition-colors">
+            <div class="text-terminal-accent text-sm font-semibold mb-2 tracking-wider">03</div>
+            <h2 class="text-xl font-bold text-white mb-3 group-hover:text-terminal-accent transition-colors">
+                Daily Challenge
+            </h2>
+            <p class="text-terminal-dim text-sm leading-relaxed mb-4">
+                Guess today's word.<br>
+                Get similarity scores to find the secret word.
+            </p>
+            <div class="text-terminal-muted text-xs tracking-wide group-hover:text-terminal-accent transition-colors">
+                PLAY →
+            </div>
+        </a>
+    </div>
+    
+    <div class="mt-16 pt-8 border-t border-white/5">
+        <p class="text-terminal-dim text-xs tracking-wide">
+            POWERED BY SPACY EN_CORE_WEB_LG • 685K WORD VECTORS • 300 DIMENSIONS
+        </p>
+    </div>
+</div>
+{% endblock %}

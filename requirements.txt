@@ -1,0 +1,4 @@
+django>=4.2
+spacy>=3.5
+scikit-learn>=1.0
+numpy>=1.21

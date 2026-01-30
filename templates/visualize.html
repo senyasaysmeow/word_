@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Word Vector Visualization{% endblock %}
+
+{% block content %}
+<div class="fade-in" x-data="visualization()">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-white tracking-wide mb-2">Visualize Vectors</h1>
+        <p class="text-terminal-muted">
+            See how words cluster in semantic space.
+        </p>
+    </header>
+    
+    <form @submit.prevent="fetchVectors()" class="mb-8">
+        <div class="mb-4">
+            <label class="block text-terminal-dim text-xs mb-2 tracking-wide">ENTER WORDS (COMMA SEPARATED)</label>
+            <input 
+                type="text" 
+                x-model="wordsInput"
+                placeholder="king, queen, man, woman, prince, princess"
+                class="w-full bg-transparent border-b border-white/20 py-2 text-white focus:border-terminal-accent transition-colors"
+                autocomplete="off"
+            >
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button 
+                type="submit"
+                class="px-6 py-2 bg-terminal-accent/10 text-terminal-accent border border-terminal-accent/30 hover:bg-terminal-accent/20 transition-colors text-sm tracking-wide"
+                :disabled="loading"
+            >
+                <span x-show="!loading">VISUALIZE</span>
+                <span x-show="loading">LOADING...</span>
+            </button>
+            
+            <div x-show="loading" class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </form>
+    
+    <!-- Error display -->
+    <div x-show="error" class="mb-4 text-red-400 text-sm" x-text="error"></div>
+    
+    <!-- Missing words display -->
+    <div x-show="missing.length > 0" class="mb-4 text-yellow-400 text-sm">
+        Unknown words: <span x-text="missing.join(', ')"></span>
+    </div>
+    
+    <!-- Chart Container -->
+    <div class="relative border border-white/10 bg-black/50 p-4" style="height: 500px;">
+        <canvas id="vectorChart"></canvas>
+        <div x-show="!hasData" class="absolute inset-0 flex items-center justify-center text-terminal-dim">
+            Enter words above to see their positions in vector space
+        </div>
+    </div>
+    
+    <div class="mt-8 pt-8 border-t border-white/5">
+        <h3 class="text-terminal-muted text-xs tracking-wide mb-4">TRY THESE EXAMPLES</h3>
+        <div class="grid gap-2 text-sm">
+            <button 
+                @click="setExample('king, queen, man, woman, prince, princess, boy, girl')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                royalty & gender: king, queen, man, woman, prince, princess...
+            </button>
+            <button 
+                @click="setExample('dog, cat, puppy, kitten, wolf, lion, tiger, bear')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                animals: dog, cat, puppy, kitten, wolf, lion...
+            </button>
+            <button 
+                @click="setExample('happy, sad, angry, fearful, joyful, depressed, excited, calm')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                emotions: happy, sad, angry, fearful, joyful...
+            </button>
+            <button 
+                @click="setExample('python, javascript, java, rust, golang, ruby, swift, kotlin')"
+                class="text-left text-terminal-dim hover:text-white transition-colors"
+            >
+                programming: python, javascript, java, rust...
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function visualization() {
+    return {
+        wordsInput: '',
+        loading: false,
+        error: null,
+        missing: [],
+        hasData: false,
+        chart: null,
+        
+        async fetchVectors() {
+            if (!this.wordsInput.trim()) {
+                this.error = 'Please enter some words';
+                return;
+            }
+            
+            this.loading = true;
+            this.error = null;
+            this.missing = [];
+            
+            try {
+                const formData = new FormData();
+                formData.append('words', this.wordsInput);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                const response = await fetch('{% url "visualize_calculate" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    this.error = data.error;
+                    return;
+                }
+                
+                this.missing = data.missing || [];
+                this.renderChart(data.coordinates);
+                
+            } catch (err) {
+                this.error = 'Failed to fetch vectors: ' + err.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        renderChart(coordinates) {
+            const ctx = document.getElementById('vectorChart').getContext('2d');
+            
+            // Destroy existing chart
+            if (this.chart) {
+                this.chart.destroy();
+            }
+            
+            const words = Object.keys(coordinates);
+            const dataPoints = words.map(word => ({
+                x: coordinates[word].x,
+                y: coordinates[word].y,
+                label: word
+            }));
+            
+            // Generate colors using HSL
+            const colors = words.map((_, i) => {
+                const hue = (i * 360 / words.length) % 360;
+                return `hsl(${hue}, 70%, 60%)`;
+            });
+            
+            this.chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Word Vectors',
+                        data: dataPoints,
+                        backgroundColor: colors,
+                        pointRadius: 8,
+                        pointHoverRadius: 12,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.label;
+                                }
+                            },
+                            backgroundColor: '#000',
+                            borderColor: '#66ff99',
+                            borderWidth: 1,
+                            titleFont: {
+                                family: "'JetBrains Mono', monospace"
+                            },
+                            bodyFont: {
+                                family: "'JetBrains Mono', monospace"
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#555',
+                                font: {
+                                    family: "'JetBrains Mono', monospace"
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#555',
+                                font: {
+                                    family: "'JetBrains Mono', monospace"
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.font = "12px 'JetBrains Mono', monospace";
+                        ctx.fillStyle = '#e5e5e5';
+                        ctx.textAlign = 'center';
+                        
+                        chart.data.datasets[0].data.forEach((point, i) => {
+                            const meta = chart.getDatasetMeta(0);
+                            const pos = meta.data[i];
+                            ctx.fillText(point.label, pos.x, pos.y - 15);
+                        });
+                        
+                        ctx.restore();
+                    }
+                }]
+            });
+            
+            this.hasData = true;
+        },
+        
+        setExample(words) {
+            this.wordsInput = words;
+            this.fetchVectors();
+        }
+    }
+}
+</script>
+{% endblock %}
