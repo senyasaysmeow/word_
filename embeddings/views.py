@@ -111,3 +111,10 @@ def daily_word_api(request):
 
     word = services.get_daily_word()
     return JsonResponse({"word": word})
+
+
+@require_http_methods(["GET"])
+def daily_hint(request):
+    """API endpoint to get hints for today's word"""
+    hints = services.get_hint()
+    return JsonResponse(hints)

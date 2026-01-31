@@ -3,18 +3,18 @@
 {% block title %}Daily Word Challenge{% endblock %}
 
 {% block content %}
-<div class="fade-in" x-data="dailyGame()">
-    <header class="mb-8">
-        <h1 class="text-3xl font-bold text-white tracking-wide mb-2">Daily Challenge</h1>
-        <p class="text-terminal-muted">
+<div class="fade-in" x-data="dailyGame()" x-init="init()">
+    <header class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-wide mb-2">Daily Challenge</h1>
+        <p class="text-terminal-muted text-sm sm:text-base">
             Guess today's secret word using semantic similarity.
         </p>
     </header>
     
     <!-- Win State -->
-    <div x-show="won" x-cloak class="mb-8 p-6 border border-terminal-accent bg-terminal-accent/5">
-        <div class="text-terminal-accent text-2xl font-bold mb-2">You got it!</div>
-        <div class="text-white text-lg mb-2">The word was: <span class="font-bold" x-text="winningWord"></span></div>
+    <div x-show="won" x-cloak class="mb-6 sm:mb-8 p-4 sm:p-6 border border-terminal-accent bg-terminal-accent/5">
+        <div class="text-terminal-accent text-xl sm:text-2xl font-bold mb-2">You got it!</div>
+        <div class="text-white text-base sm:text-lg mb-2">The word was: <span class="font-bold" x-text="winningWord"></span></div>
         <div class="text-terminal-muted text-sm">
             Solved in <span x-text="guesses.length"></span> guesses
         </div>
@@ -24,7 +24,7 @@
     <form 
         x-show="!won"
         @submit.prevent="submitGuess()"
-        class="mb-8"
+        class="mb-6 sm:mb-8"
     >
         <div class="mb-4">
             <label class="block text-terminal-dim text-xs mb-2 tracking-wide">ENTER YOUR GUESS</label>
@@ -39,14 +39,23 @@
             >
         </div>
         
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-3 sm:gap-4">
             <button 
                 type="submit"
-                class="px-6 py-2 bg-terminal-accent/10 text-terminal-accent border border-terminal-accent/30 hover:bg-terminal-accent/20 transition-colors text-sm tracking-wide"
+                class="px-4 sm:px-6 py-2 bg-terminal-accent/10 text-terminal-accent border border-terminal-accent/30 hover:bg-terminal-accent/20 transition-colors text-sm tracking-wide"
                 :disabled="loading || !currentGuess.trim()"
             >
                 <span x-show="!loading">GUESS</span>
                 <span x-show="loading">CHECKING...</span>
+            </button>
+            
+            <!-- Hint Button -->
+            <button 
+                type="button"
+                @click="openHintPopup()"
+                class="px-4 sm:px-6 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors text-sm tracking-wide"
+            >
+                HINT
             </button>
             
             <div x-show="loading" class="loading-dots">
@@ -55,7 +64,7 @@
                 <span></span>
             </div>
             
-            <span class="text-terminal-dim text-sm" x-text="guesses.length + ' guesses'"></span>
+            <span class="text-terminal-dim text-xs sm:text-sm" x-text="guesses.length + ' guesses'"></span>
         </div>
         
         <!-- Error display -->
@@ -63,7 +72,7 @@
     </form>
     
     <!-- Latest Guess Result -->
-    <div x-show="latestResult && !won" x-cloak class="mb-6 p-4 border border-white/10">
+    <div x-show="latestResult && !won" x-cloak class="mb-6 p-3 sm:p-4 border border-white/10">
         <div class="flex items-center justify-between">
             <span class="text-white font-semibold" x-text="latestResult?.word"></span>
             <span 
@@ -82,9 +91,9 @@
     </div>
     
     <!-- Guess History -->
-    <div x-show="guesses.length > 0" class="mb-8">
-        <h3 class="text-terminal-dim text-xs tracking-wide mb-4">GUESS HISTORY (SORTED BY SIMILARITY)</h3>
-        <div class="space-y-2 max-h-[400px] overflow-y-auto">
+    <div x-show="guesses.length > 0" class="mb-6 sm:mb-8">
+        <h3 class="text-terminal-dim text-xs tracking-wide mb-3 sm:mb-4">GUESS HISTORY (SORTED BY SIMILARITY)</h3>
+        <div class="space-y-1 sm:space-y-2 max-h-[300px] sm:max-h-[400px] overflow-y-auto">
             <template x-for="(guess, index) in sortedGuesses" :key="guess.word">
                 <div 
                     class="flex items-center justify-between py-2 px-3 border-b border-white/5"
@@ -109,21 +118,141 @@
     </div>
     
     <!-- Instructions -->
-    <div class="mt-12 pt-8 border-t border-white/5">
-        <h3 class="text-terminal-muted text-xs tracking-wide mb-4">HOW TO PLAY</h3>
-        <div class="text-terminal-dim text-sm space-y-2">
+    <div class="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/5">
+        <h3 class="text-terminal-muted text-xs tracking-wide mb-3 sm:mb-4">HOW TO PLAY</h3>
+        <div class="text-terminal-dim text-xs sm:text-sm space-y-2">
             <p>Guess words and see how semantically similar they are to today's secret word.</p>
             <p>Similarity is measured using word embeddings (0% = unrelated, 100% = exact match).</p>
             <p>Use the feedback to narrow down your guesses!</p>
         </div>
         
-        <div class="mt-6 text-terminal-dim text-sm">
+        <div class="mt-4 sm:mt-6 text-terminal-dim text-xs sm:text-sm">
             <p class="text-terminal-muted text-xs tracking-wide mb-2">HINT THRESHOLDS</p>
-            <div class="flex gap-4 flex-wrap">
+            <div class="flex gap-3 sm:gap-4 flex-wrap text-xs sm:text-sm">
                 <span><span class="text-red-400">0-50%</span> Cold</span>
                 <span><span class="text-yellow-400">50-70%</span> Warm</span>
                 <span><span class="text-orange-400">70-85%</span> Hot</span>
                 <span><span class="text-terminal-accent">85-100%</span> Very Hot!</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hint Popup Modal -->
+    <div 
+        x-show="showHintPopup" 
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <!-- Backdrop -->
+        <div @click="showHintPopup = false" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content -->
+        <div 
+            class="relative w-full max-w-md glass-panel border border-white/20"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.stop
+        >
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-white tracking-wide">HINTS</h3>
+                <button 
+                    @click="showHintPopup = false" 
+                    class="text-terminal-dim hover:text-white transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Loading State -->
+            <div x-show="loadingHints" class="flex items-center justify-center py-8">
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <!-- Hints Content -->
+            <div x-show="!loadingHints && hints" class="space-y-4">
+                <!-- Word Length Hint -->
+                <div class="p-3 border border-white/10 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-terminal-muted text-xs tracking-wide mb-1">WORD LENGTH</p>
+                            <p x-show="hintsRevealed.length" class="text-white font-semibold">
+                                <span x-text="hints?.word_length"></span> letters
+                            </p>
+                            <p x-show="!hintsRevealed.length" class="text-terminal-dim">Hidden</p>
+                        </div>
+                        <button 
+                            x-show="!hintsRevealed.length"
+                            @click="revealHint('length')"
+                            class="px-3 py-1 text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors rounded"
+                        >
+                            REVEAL
+                        </button>
+                        <span x-show="hintsRevealed.length" class="text-terminal-accent text-xs">Revealed</span>
+                    </div>
+                </div>
+                
+                <!-- First Letter Hint -->
+                <div class="p-3 border border-white/10 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-terminal-muted text-xs tracking-wide mb-1">FIRST LETTER</p>
+                            <p x-show="hintsRevealed.letter" class="text-white font-semibold text-xl" x-text="hints?.first_letter"></p>
+                            <p x-show="!hintsRevealed.letter" class="text-terminal-dim">Hidden</p>
+                        </div>
+                        <button 
+                            x-show="!hintsRevealed.letter"
+                            @click="revealHint('letter')"
+                            class="px-3 py-1 text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors rounded"
+                        >
+                            REVEAL
+                        </button>
+                        <span x-show="hintsRevealed.letter" class="text-terminal-accent text-xs">Revealed</span>
+                    </div>
+                </div>
+                
+                <!-- Similar Words Hint -->
+                <div class="p-3 border border-white/10 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-terminal-muted text-xs tracking-wide">SIMILAR WORDS</p>
+                        <button 
+                            x-show="!hintsRevealed.similar"
+                            @click="revealHint('similar')"
+                            class="px-3 py-1 text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors rounded"
+                        >
+                            REVEAL
+                        </button>
+                        <span x-show="hintsRevealed.similar" class="text-terminal-accent text-xs">Revealed</span>
+                    </div>
+                    <p x-show="hintsRevealed.similar" class="text-white text-sm" x-text="hints?.similar_words?.join(', ')"></p>
+                    <p x-show="!hintsRevealed.similar" class="text-terminal-dim text-sm">Hidden</p>
+                </div>
+            </div>
+            
+            <!-- Close Button -->
+            <div class="mt-6 pt-4 border-t border-white/10">
+                <button 
+                    @click="showHintPopup = false"
+                    class="w-full px-4 py-2 bg-white/5 text-terminal-muted hover:text-white hover:bg-white/10 transition-colors text-sm tracking-wide rounded"
+                >
+                    CLOSE
+                </button>
             </div>
         </div>
     </div>
@@ -141,6 +270,71 @@ function dailyGame() {
         won: false,
         winningWord: null,
         latestResult: null,
+        
+        // Hint state
+        showHintPopup: false,
+        hints: null,
+        loadingHints: false,
+        hintsRevealed: {
+            letter: false,
+            length: false,
+            similar: false
+        },
+        
+        // Get today's date string for storage key
+        getTodayKey() {
+            return 'wordGame_' + new Date().toISOString().split('T')[0];
+        },
+        
+        // Initialize: load saved state from localStorage
+        init() {
+            const key = this.getTodayKey();
+            const saved = localStorage.getItem(key);
+            
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    this.guesses = state.guesses || [];
+                    this.won = state.won || false;
+                    this.winningWord = state.winningWord || null;
+                    this.latestResult = state.latestResult || null;
+                    this.hintsRevealed = state.hintsRevealed || { letter: false, length: false, similar: false };
+                } catch (e) {
+                    console.error('Failed to load saved state:', e);
+                }
+            }
+            
+            // Clean up old days' data
+            this.cleanupOldData();
+        },
+        
+        // Save current state to localStorage
+        saveState() {
+            const key = this.getTodayKey();
+            const state = {
+                guesses: this.guesses,
+                won: this.won,
+                winningWord: this.winningWord,
+                latestResult: this.latestResult,
+                hintsRevealed: this.hintsRevealed
+            };
+            localStorage.setItem(key, JSON.stringify(state));
+        },
+        
+        // Remove old days' game data
+        cleanupOldData() {
+            const todayKey = this.getTodayKey();
+            const keysToRemove = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('wordGame_') && key !== todayKey) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        },
         
         get sortedGuesses() {
             return [...this.guesses].sort((a, b) => b.similarity - a.similarity);
@@ -205,6 +399,9 @@ function dailyGame() {
                     this.winningWord = word;
                 }
                 
+                // Save state after each guess
+                this.saveState();
+                
                 // Focus input for next guess
                 this.$nextTick(() => {
                     this.$refs.guessInput?.focus();
@@ -215,6 +412,29 @@ function dailyGame() {
             } finally {
                 this.loading = false;
             }
+        },
+        
+        // Open hint popup and fetch hints if not already loaded
+        async openHintPopup() {
+            this.showHintPopup = true;
+            
+            if (!this.hints) {
+                this.loadingHints = true;
+                try {
+                    const response = await fetch('{% url "daily_hint" %}');
+                    this.hints = await response.json();
+                } catch (err) {
+                    console.error('Failed to fetch hints:', err);
+                } finally {
+                    this.loadingHints = false;
+                }
+            }
+        },
+        
+        // Reveal a specific hint
+        revealHint(type) {
+            this.hintsRevealed[type] = true;
+            this.saveState();
         },
         
         getSimilarityColor(similarity) {

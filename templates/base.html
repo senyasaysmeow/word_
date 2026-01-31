@@ -49,6 +49,10 @@
             padding: 0;
         }
         
+        [x-cloak] { 
+            display: none !important; 
+        }
+        
         html, body {
             height: 100%;
             background: #000;
@@ -96,13 +100,25 @@
             position: relative;
             z-index: 2;
             min-height: 100vh;
-            padding: 2rem;
+            padding: 1rem;
+        }
+        
+        @media (min-width: 640px) {
+            .shell {
+                padding: 2rem;
+            }
         }
         
         .content-wrapper {
             max-width: 900px;
             margin: 0 auto;
             padding-top: 5rem;
+        }
+        
+        @media (min-width: 640px) {
+            .content-wrapper {
+                padding-top: 6rem;
+            }
         }
         
         /* Glass panel for content */
@@ -112,8 +128,14 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.25rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (min-width: 640px) {
+            .glass-panel {
+                padding: 2rem;
+            }
         }
         
         /* Nav glass style */
@@ -251,10 +273,53 @@
     <div id="noise"></div>
     
     <main class="shell">
-        <nav class="nav-glass fixed top-0 left-0 right-0 z-10 border-b border-white/5">
-            <div class="max-w-[900px] mx-auto px-8 py-4 flex items-center gap-8">
-                <a href="{% url 'home' %}" class="text-white font-bold text-lg tracking-wide">word_</a>
-                <div class="flex gap-6 text-sm">
+        <nav class="nav-glass fixed top-0 left-0 right-0 z-10 border-b border-white/5" x-data="{ mobileMenuOpen: false }">
+            <div class="max-w-[900px] mx-auto px-4 sm:px-8 h-16 sm:h-16 flex items-center justify-between sm:justify-start sm:gap-12">
+                <!-- Logo + Mobile Menu Container -->
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'home' %}" class="text-white font-bold text-xl sm:text-2xl tracking-wide">word_</a>
+                    
+                    <!-- Mobile Menu Toggle -->
+                    <button 
+                        @click="mobileMenuOpen = !mobileMenuOpen" 
+                        class="sm:hidden text-terminal-muted hover:text-white transition-colors p-1"
+                        :class="mobileMenuOpen ? 'text-terminal-accent' : ''"
+                    >
+                        <svg x-show="!mobileMenuOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                        <svg x-show="mobileMenuOpen" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Mobile Slide-out Menu -->
+                    <div 
+                        x-show="mobileMenuOpen"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-x-4"
+                        x-transition:enter-end="opacity-100 translate-x-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-x-0"
+                        x-transition:leave-end="opacity-0 -translate-x-4"
+                        class="sm:hidden flex items-center gap-4 text-sm"
+                    >
+                        <span class="text-terminal-dim">/</span>
+                        <a href="{% url 'analogy' %}" class="nav-link {% if request.resolver_match.url_name == 'analogy' %}active{% endif %}">
+                            analogy
+                        </a>
+                        <a href="{% url 'visualize' %}" class="nav-link {% if request.resolver_match.url_name == 'visualize' %}active{% endif %}">
+                            visualize
+                        </a>
+                        <a href="{% url 'daily_game' %}" class="nav-link {% if request.resolver_match.url_name == 'daily_game' %}active{% endif %}">
+                            daily
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden sm:flex gap-8 text-base">
                     <a href="{% url 'analogy' %}" class="nav-link {% if request.resolver_match.url_name == 'analogy' %}active{% endif %}">
                         analogy
                     </a>
@@ -340,6 +405,7 @@
             uniform float uMouseStrength;
             uniform float uUseMouse;
             uniform float uBrightness;
+            uniform float uAspect;
             
             float time;
             
@@ -399,7 +465,9 @@
                 float intensity = pattern(s * 0.1, q, r) * 1.3 - 0.03;
                 
                 if(uUseMouse > 0.5){
+                    // Apply same aspect ratio correction to mouse position
                     vec2 mouseWorld = uMouse * uScale;
+                    mouseWorld.x *= uAspect;
                     float distToMouse = distance(s, mouseWorld);
                     float mouseInfluence = exp(-distToMouse * 8.0) * uMouseStrength * 10.0;
                     intensity += mouseInfluence;
@@ -476,6 +544,9 @@
                 }
                 
                 vec2 p = uv * uScale;
+                // Apply aspect ratio correction to prevent squeezing
+                p.x *= uAspect;
+                
                 vec3 col = getColor(p);
                 
                 if(uChromaticAberration != 0.0){
@@ -552,7 +623,8 @@
             uMouse: gl.getUniformLocation(program, 'uMouse'),
             uMouseStrength: gl.getUniformLocation(program, 'uMouseStrength'),
             uUseMouse: gl.getUniformLocation(program, 'uUseMouse'),
-            uBrightness: gl.getUniformLocation(program, 'uBrightness')
+            uBrightness: gl.getUniformLocation(program, 'uBrightness'),
+            uAspect: gl.getUniformLocation(program, 'uAspect')
         };
         
         // Set static uniforms
@@ -596,6 +668,9 @@
             canvas.style.height = h + 'px';
             gl.viewport(0, 0, canvas.width, canvas.height);
             gl.uniform3f(uniforms.iResolution, canvas.width, canvas.height, canvas.width / canvas.height);
+            // Pass aspect ratio to shader to prevent pattern squeezing
+            const aspect = w / h;
+            gl.uniform1f(uniforms.uAspect, aspect);
         }
         
         window.addEventListener('resize', resize);

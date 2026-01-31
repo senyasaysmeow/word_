@@ -19,7 +19,7 @@ def get_nlp():
     """Get or load the spaCy model (singleton pattern)"""
     global _nlp
     if _nlp is None:
-        _nlp = spacy.load("en_core_web_lg")
+        _nlp = spacy.load("ru_core_news_lg")
     return _nlp
 
 
@@ -228,3 +228,34 @@ def check_guess(guess: str, date_obj: Optional[date] = None) -> dict:
         return result
 
     return {"similarity": result["similarity"], "correct": False, "error": None}
+
+
+def get_hint(date_obj: Optional[date] = None) -> dict:
+    """
+    Get hints for the daily word
+    Returns first letter, word length, and similar words
+    """
+    nlp = get_nlp()
+    target = get_daily_word(date_obj)
+
+    # Get similar words using vector similarity
+    vec = nlp.vocab[target].vector
+    ms = nlp.vocab.vectors.most_similar(np.asarray([vec]), n=30)
+
+    similar_words = []
+    for word_id in ms[0][0]:
+        word = nlp.vocab.strings[word_id]
+        # Filter: not the target, alphabetic only, reasonable length
+        if (
+            word.lower() != target
+            and word.isalpha()
+            and len(word) > 2
+            and len(similar_words) < 5
+        ):
+            similar_words.append(word.lower())
+
+    return {
+        "first_letter": target[0].upper(),
+        "word_length": len(target),
+        "similar_words": similar_words,
+    }

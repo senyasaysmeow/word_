@@ -17,4 +17,5 @@ urlpatterns = [
     path("game/", views.daily_game, name="daily_game"),
     path("game/guess/", views.daily_guess, name="daily_guess"),
     path("game/word/", views.daily_word_api, name="daily_word_api"),
+    path("game/hint/", views.daily_hint, name="daily_hint"),
 ]

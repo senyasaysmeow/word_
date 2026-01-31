@@ -4,14 +4,14 @@
 
 {% block content %}
 <div class="fade-in">
-    <header class="mb-8">
-        <h1 class="text-3xl font-bold text-white tracking-wide mb-2">Word Analogy</h1>
-        <p class="text-terminal-muted">
+    <header class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-wide mb-2">Word Analogy</h1>
+        <p class="text-terminal-muted text-sm sm:text-base">
             Compute A - B + C to discover semantic relationships.
         </p>
     </header>
     
-    <div class="mb-8">
+    <div class="mb-6 sm:mb-8">
         <p class="text-terminal-dim text-sm mb-4">
             Example: "king" - "man" + "woman" = "queen"
         </p>
@@ -21,13 +21,16 @@
         hx-post="{% url 'analogy_calculate' %}"
         hx-target="#results"
         hx-indicator="#loading"
-        class="mb-8"
+        class="mb-6 sm:mb-8"
     >
         {% csrf_token %}
         
-        <div class="flex flex-wrap items-center gap-4 mb-6">
-            <div class="flex-1 min-w-[150px]">
-                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD A</label>
+        <!-- Mobile: Stacked layout, Desktop: Inline layout -->
+        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mb-6">
+            <div class="flex-1 sm:min-w-[150px]">
+                <label class="block text-xs mb-2 tracking-wide">
+                    <span class="text-cyan-400 font-semibold">WORD A</span>
+                </label>
                 <input 
                     type="text" 
                     name="word_a" 
@@ -38,10 +41,12 @@
                 >
             </div>
             
-            <span class="text-terminal-accent text-2xl mt-5">-</span>
+            <span class="hidden sm:block text-terminal-accent text-2xl mt-5">-</span>
             
-            <div class="flex-1 min-w-[150px]">
-                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD B</label>
+            <div class="flex-1 sm:min-w-[150px]">
+                <label class="block text-xs mb-2 tracking-wide">
+                    <span class="sm:hidden text-terminal-accent">- </span><span class="text-pink-400 font-semibold">WORD B</span>
+                </label>
                 <input 
                     type="text" 
                     name="word_b" 
@@ -52,10 +57,12 @@
                 >
             </div>
             
-            <span class="text-terminal-accent text-2xl mt-5">+</span>
+            <span class="hidden sm:block text-terminal-accent text-2xl mt-5">+</span>
             
-            <div class="flex-1 min-w-[150px]">
-                <label class="block text-terminal-dim text-xs mb-2 tracking-wide">WORD C</label>
+            <div class="flex-1 sm:min-w-[150px]">
+                <label class="block text-xs mb-2 tracking-wide">
+                    <span class="sm:hidden text-terminal-accent">+ </span><span class="text-yellow-400 font-semibold">WORD C</span>
+                </label>
                 <input 
                     type="text" 
                     name="word_c" 
@@ -66,9 +73,9 @@
                 >
             </div>
             
-            <span class="text-terminal-accent text-2xl mt-5">=</span>
+            <span class="hidden sm:block text-terminal-accent text-2xl mt-5">=</span>
             
-            <span class="text-terminal-muted text-2xl mt-5">?</span>
+            <span class="hidden sm:block text-terminal-muted text-2xl mt-5">?</span>
         </div>
         
         <div class="flex items-center gap-4">
@@ -93,7 +100,7 @@
         <!-- Results will be inserted here via HTMX -->
     </div>
     
-    <div class="mt-12 pt-8 border-t border-white/5">
+    <div class="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/5">
         <h3 class="text-terminal-muted text-xs tracking-wide mb-4">TRY THESE EXAMPLES</h3>
         <div class="grid gap-2 text-sm">
             <button 
