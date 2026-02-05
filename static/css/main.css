@@ -1,0 +1,221 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+[x-cloak] { 
+    display: none !important; 
+}
+
+html, body {
+    height: 100%;
+    background: #000;
+    color: #e5e5e5;
+    font-family: 'JetBrains Mono', monospace;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+#trailCanvas {
+    position: fixed;
+    inset: 0;
+    display: block;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#noise {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: 
+        repeating-linear-gradient(
+            transparent, 
+            transparent 2px, 
+            rgba(255, 255, 255, .015) 2px, 
+            rgba(255, 255, 255, .015) 4px
+        ),
+        repeating-linear-gradient(
+            90deg, 
+            transparent, 
+            transparent 3px, 
+            rgba(255, 255, 255, .01) 3px, 
+            rgba(255, 255, 255, .01) 6px
+        );
+    mix-blend-mode: overlay;
+    opacity: .5;
+    z-index: 1;
+}
+
+.shell {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+@media (min-width: 640px) {
+    .shell {
+        padding: 2rem;
+    }
+}
+
+.content-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding-top: 5rem;
+}
+
+@media (min-width: 640px) {
+    .content-wrapper {
+        padding-top: 6rem;
+    }
+}
+
+/* Glass panel for content */
+.glass-panel {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+    .glass-panel {
+        padding: 2rem;
+    }
+}
+
+/* Nav glass style */
+.nav-glass {
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #222;
+    border-radius: 3px;
+}
+
+/* Input styles */
+input[type="text"], textarea {
+    background: transparent;
+    color: #fff;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    caret-color: #66ff99;
+}
+
+input[type="text"]::placeholder, textarea::placeholder {
+    color: #555;
+}
+
+/* Focus ring */
+input:focus, textarea:focus, button:focus {
+    outline: none;
+}
+
+/* Loading animation */
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.loading-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #666;
+    animation: jump 1s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes jump {
+    0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.35;
+    }
+    40% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+/* Fade in animation */
+.fade-in {
+    animation: fade 0.4s ease;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Blink cursor */
+.blink {
+    animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+/* HTMX loading indicator */
+.htmx-request .htmx-indicator {
+    display: inline-flex !important;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+/* Nav link styles */
+.nav-link {
+    color: #999;
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+}
+
+.nav-link:hover {
+    color: #fff;
+}
+
+.nav-link.active {
+    color: #66ff99;
+    border-bottom-color: #66ff99;
+}

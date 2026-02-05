@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Word Analogy Calculator{% endblock %}
 
@@ -127,11 +128,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function fillExample(a, b, c) {
-    document.querySelector('input[name="word_a"]').value = a;
-    document.querySelector('input[name="word_b"]').value = b;
-    document.querySelector('input[name="word_c"]').value = c;
-}
-</script>
+<script src="{% static 'js/analogy.js' %}"></script>
 {% endblock %}
