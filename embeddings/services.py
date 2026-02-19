@@ -19,7 +19,7 @@ def get_nlp():
     """Get or load the spaCy model (singleton pattern)"""
     global _nlp
     if _nlp is None:
-        _nlp = spacy.load("ru_core_news_lg")
+        _nlp = spacy.load("en_core_web_lg")
     return _nlp
 
 
